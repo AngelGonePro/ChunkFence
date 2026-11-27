@@ -1,0 +1,23 @@
+# Visual Studio / IDE state (locked while the IDE is open)
+.vs/
+.vscode/
+.idea/
+*.iml
+*.suo
+*.user
+
+# Build output
+build/
+out/
+bin/
+obj/
+*.class
+
+# Python caches from tools/
+__pycache__/
+*.pyc
+
+# OS junk
+Thumbs.db
+desktop.ini
+.DS_Store

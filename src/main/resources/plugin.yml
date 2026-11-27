@@ -1,0 +1,20 @@
+name: ChunkFence
+version: '${version}'
+main: net.cosmoscraft.chunkfence.ChunkFencePlugin
+api-version: '1.21'
+load: STARTUP
+author: Angel (CosmosCraft)
+description: Keeps players in existing chunks of void-generated (frozen) worlds and out of not-yet-generated chunks everywhere else. Includes a void generator.
+commands:
+  chunkfence:
+    description: ChunkFence status and maintenance
+    usage: /<command> <status|check|rescan <world>|reload>
+    aliases: [cfence]
+    permission: chunkfence.admin
+permissions:
+  chunkfence.admin:
+    description: Use /chunkfence
+    default: op
+  chunkfence.bypass:
+    description: Walk and teleport outside the fence (still generates chunks there!)
+    default: false

@@ -1,0 +1,99 @@
+# ChunkFence - every world gets a fence automatically, one of two kinds:
+#
+# FROZEN  Worlds whose generator is ChunkFence (bukkit.yml / Multiverse: generator: ChunkFence).
+#         New chunks there are empty void. On first start the world's region files are read from
+#         disk and every chunk that exists is saved to plugins/ChunkFence/snapshots/<world-uuid>.cfs.
+#         Players can only walk, ride, teleport or use portals into chunks in that snapshot.
+#
+# LIVE    Every other world (e.g. your new Iris world and its nether/end). Players can go anywhere,
+#         but stepping into a chunk the server hasn't finished generating and loading puts them back
+#         in the chunk they came from until it's ready. Teleports aren't affected.
+
+# Also freeze these worlds even if they use another generator (e.g. another void generator).
+frozen-worlds: []
+# Turn ChunkFence off completely for these worlds.
+disabled-worlds: []
+
+live:
+  # false = worlds that aren't frozen are left alone.
+  enabled: true
+
+scan:
+  # Leave out chunks that were only partly generated (the ring at the edge of explored land).
+  require-full-status: true
+  # Leave out chunks that are nothing but air (void chunks).
+  ignore-empty-chunks: true
+  # The End has real all-air chunks between islands, so they stay allowed unless this is true.
+  ignore-empty-chunks-in-end: false
+  # Threads used for the first index. 0 = half of the CPU cores.
+  threads: 0
+
+rescue:
+  # Players found outside a frozen fence (on join, world change, respawn) are moved to the nearest
+  # allowed chunk within this many chunks; otherwise to world spawn if that is allowed.
+  search-radius-chunks: 64
+
+messages:
+  use-action-bar: true
+  # Minimum time between two messages to the same player.
+  cooldown-ms: 1000
+  # '&' colour codes. Set a message to '' to disable it.
+  blocked: "&cYou can't go any further - this area is closed."
+  generating: "&eThis area is still generating - give it a moment."
+  blocked-teleport: "&cThat location is outside the playable area."
+  rescued: "&eYou were moved back inside the playable area."
+
+heights:
+  # Keeps the main world's overworld, nether and end at the height their chunks were saved with,
+  # by installing the data pack <level-name>/datapacks/chunkfence-heights. Its files are Minecraft's own
+  # dimension files for your server version with only min_y, height and logical_height changed.
+  #   auto   - the height the saved chunks have; a dimension with no chunks yet gets the Iris pack's height
+  #   iris   - the Iris pack's heights
+  #   manual - the values under 'manual' below
+  #   off    - leave world heights alone
+  # In every mode a height is never set lower than what the saved chunks already use.
+  # A change takes effect on the next start; the guard below makes the first start stop safely.
+  mode: auto
+  # Iris pack folder in plugins/Iris/packs. auto = read bukkit.yml (generator: Iris:<pack>) or use the only pack.
+  iris-pack: auto
+  # Filled in by ChunkFence itself: when a world that uses the overworld/nether/end dimension type has
+  # saved chunks taller than that type's height (e.g. an extra Multiverse world), ChunkFence writes the
+  # needed height here and into the data pack, stops the server WITHOUT saving, and the next start uses it.
+  # It raises the height for every world of that type. You can also set or remove these by hand.
+  raised: {}
+  manual:
+    overworld:
+      min-y: -64
+      max-y: 1024
+      logical-height: 1024
+    the_nether:
+      min-y: -64
+      max-y: 448
+      logical-height: 448
+    the_end:
+      min-y: -64
+      max-y: 448
+      logical-height: 448
+
+biomes:
+  # Keeps custom biomes (e.g. Iris's rrtspecial:*) registered for worlds whose generator is gone, by writing the
+  # data pack <level-name>/datapacks/chunkfence-biomes. Without it every chunk using them logs "Unknown registry
+  # key ... using default" while loading (slow) and loses the biome when saved. Biomes come from Iris packs in
+  # plugins/ChunkFence/datapacks (all of their biomes) and from biome ids found in the saved chunks (settings
+  # looked up in plugins/Iris/packs; plains-like if not found). Biomes another data pack already defines are skipped.
+  enabled: true
+
+guard:
+  # Before a world loads any chunk, compare its height with its saved chunks. If the chunks are taller,
+  # saving is turned off for every world and the server is stopped, so nothing is written back cut off.
+  enabled: true
+
+recovery:
+  # On the first start, find chunks that were saved cut off (shorter than the rest of their world) and
+  # restore the missing part from the older full-height copy still inside the region file, when one is left.
+  # Blocks inside the cut chunk's remaining height are kept as they are now.
+  #   repair - restore; every changed region file is copied to plugins/ChunkFence/backups first
+  #   report - only write plugins/ChunkFence/recovery-report-*.txt
+  #   off
+  # Runs once per region folder. Delete plugins/ChunkFence/recovery/ to run it again.
+  mode: repair
